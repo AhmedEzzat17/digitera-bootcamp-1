@@ -1,0 +1,1 @@
+New order from ODORATUS Recipient: Amelia Hart Phone: +1 212 555 0148 Address: 48 Mercer Street, Apt 4B City: New York Postal code: 10013 Delivery note: None Payment: Credit / Debit Card Cart items: - Fleur de Lune x1 — 195 USD - Santal Parchment x1 — 220 USD - Noir Cocoon x1 — 240 USD Subtotal: 655 USD Delivery: 10 USD Total: 665 USD
