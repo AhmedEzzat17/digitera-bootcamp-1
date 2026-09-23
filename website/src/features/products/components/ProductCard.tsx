@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useCart } from "@/features/cart";
 import { productPaths } from "@/features/products/paths";
 import type { Product } from "@/features/products/types/product.types";
-import { formatWholePrice } from "@/features/products/utils/product.utils";
+import {
+  formatWholePrice,
+  resolveProductImages,
+} from "@/features/products/utils/product.utils";
 
 type ProductCardProps = {
   product: Product;
@@ -13,7 +16,7 @@ type ProductCardProps = {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
-  const image = product.images[0];
+  const image = resolveProductImages(product)[0];
 
   return (
     <article className="flex min-w-0 flex-1 flex-col items-start gap-4 self-stretch rounded-lg bg-white p-4">

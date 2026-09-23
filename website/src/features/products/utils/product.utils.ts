@@ -1,8 +1,31 @@
 import type {
+  Product,
   ProductListQuery,
   ProductSearchParams,
   ProductSort,
 } from "@/features/products/types/product.types";
+
+const IMAGE_FALLBACKS: Record<string, string[]> = {
+  "fleur-de-lune": ["/images/products/fleur-de-lune.png"],
+  "santal-parchment": [
+    "/images/products/santal-parchment.png",
+    "/images/products/santal-parchment-2.png",
+    "/images/products/santal-parchment-3.png",
+    "/images/products/santal-parchment-4.png",
+  ],
+  "noir-cocoon": ["/images/products/noir-cocoon.png"],
+  "sol-dor": ["/images/products/sol-dor.png"],
+  "atelier-oud": ["/images/products/atelier-oud.png"],
+  "rose-absolute": ["/images/products/rose-absolute.png"],
+};
+
+export function resolveProductImages(product: Product): string[] {
+  if (product.images.length > 0) {
+    return product.images;
+  }
+
+  return IMAGE_FALLBACKS[product.id] ?? [];
+}
 
 const SORT_VALUES: ProductSort[] = [
   "name-asc",
@@ -29,6 +52,14 @@ export function formatPrice(amount: number): string {
 
 export function formatWholePrice(amount: number): string {
   return `$${amount}`;
+}
+
+export function formatTaxonomyLabel(value: string): string {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export function parseProductListQuery(

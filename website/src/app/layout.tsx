@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif, Manrope } from "next/font/google";
+import { Footer } from "@/components/shared/Footer";
 import { Header } from "@/components/shared/Header";
 import { Providers } from "@/app/providers";
 import "./globals.css";
@@ -37,10 +38,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#faf8f5] font-[family-name:var(--font-manrope)] text-[#1a1a1a]">
+      <body className="flex min-h-full flex-col bg-[#faf8f5] font-[family-name:var(--font-manrope)] text-[#1a1a1a]">
         <Providers>
           <Header />
-          <main>{children}</main>
+          <main className="flex-1">{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>
