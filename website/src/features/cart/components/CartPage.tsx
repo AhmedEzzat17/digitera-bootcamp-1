@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { CartItem } from "@/features/cart/components/CartItem";
 import { CartSummary } from "@/features/cart/components/CartSummary";
+import { RemoveCartItemDialog } from "@/features/cart/components/RemoveCartItemDialog";
 import { useCart } from "@/features/cart/hooks/useCart";
+import type { CartLine } from "@/features/cart/types/cart.types";
 import { getCartDelivery } from "@/features/cart/utils/cart.utils";
 
 export function CartPage() {
   const { lines, total, increment, decrement, removeItem } = useCart();
+  const [pendingRemoval, setPendingRemoval] = useState<CartLine | null>(null);
   const itemCount = lines.length;
   const itemNoun = itemCount === 1 ? "item" : "items";
 
@@ -50,7 +54,11 @@ export function CartPage() {
                   line={line}
                   onIncrement={increment}
                   onDecrement={decrement}
-                  onRemove={removeItem}
+                  onRemove={(lineId) =>
+                    setPendingRemoval(
+                      lines.find((line) => line.id === lineId) ?? null,
+                    )
+                  }
                 />
               ))
             )}
@@ -58,6 +66,16 @@ export function CartPage() {
         </div>
         <CartSummary subtotal={total} delivery={getCartDelivery(lines)} />
       </div>
+      {pendingRemoval ? (
+        <RemoveCartItemDialog
+          line={pendingRemoval}
+          onCancel={() => setPendingRemoval(null)}
+          onConfirm={() => {
+            removeItem(pendingRemoval.id);
+            setPendingRemoval(null);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

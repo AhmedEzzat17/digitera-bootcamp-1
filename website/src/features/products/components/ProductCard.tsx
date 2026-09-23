@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         <button
           type="button"
-          className="flex w-full items-center justify-center rounded border border-solid border-[#ebe6de] py-3 text-[11px] font-semibold uppercase whitespace-nowrap text-[#1a1a1a]"
+          className="flex w-full cursor-pointer items-center justify-center rounded border border-solid border-[#ebe6de] py-3 text-[11px] font-semibold uppercase whitespace-nowrap text-[#1a1a1a]"
           onClick={() =>
             addItem({
               productId: product.id,

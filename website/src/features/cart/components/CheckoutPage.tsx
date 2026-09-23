@@ -2,10 +2,14 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cartPaths } from "@/features/cart/paths";
 import { useCart } from "@/features/cart/hooks/useCart";
 import type { CartLine } from "@/features/cart/types/cart.types";
+import {
+  readCheckoutDetails,
+  saveCheckoutDetails,
+} from "@/features/cart/utils/checkout-details";
 import {
   formatCartAmount,
   getCartDelivery,
@@ -71,13 +75,28 @@ export function CheckoutPage() {
   const delivery = getCartDelivery(lines);
   const orderTotal = total + delivery;
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [recipientName, setRecipientName] = useState("Amelia Hart");
-  const [phone, setPhone] = useState("+1 212 555 0148");
-  const [address, setAddress] = useState("48 Mercer Street, Apt 4B");
-  const [city, setCity] = useState("New York");
-  const [postalCode, setPostalCode] = useState("10013");
+  const [recipientName, setRecipientName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [note, setNote] = useState("");
   const [placed, setPlaced] = useState(false);
+
+  useEffect(() => {
+    const saved = readCheckoutDetails();
+    if (!saved) {
+      return;
+    }
+
+    setRecipientName(saved.recipientName);
+    setPhone(saved.phone);
+    setAddress(saved.address);
+    setCity(saved.city);
+    setPostalCode(saved.postalCode);
+    setNote(saved.note);
+    setPaymentMethod(saved.paymentMethod);
+  }, []);
 
   const phoneVerified = phone.trim().length > 0;
   const canPlaceOrder =
@@ -119,9 +138,19 @@ export function CheckoutPage() {
             delivery,
             total: orderTotal,
           });
+          saveCheckoutDetails({
+            recipientName,
+            phone,
+            address,
+            city,
+            postalCode,
+            note,
+            paymentMethod,
+          });
           setPlaced(true);
-          window.location.assign(
+          window.open(
             `${WHATSAPP_ORDER_URL}?text=${encodeURIComponent(message)}`,
+            "_blank",
           );
         }}
       >
@@ -218,11 +247,7 @@ export function CheckoutPage() {
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Leave with the concierge if unavailable."
-              className={cn(
-                fieldClassName,
-                "h-[76px] resize-none p-4 placeholder:text-[#605a54]",
-              )}
+              className={cn(fieldClassName, "h-[76px] resize-none p-4")}
             />
           </label>
         </div>
@@ -246,17 +271,6 @@ export function CheckoutPage() {
               onSelect={() => setPaymentMethod("cash")}
             />
           </div>
-          {paymentMethod === "card" ? (
-            <div className="flex flex-col gap-3.5 border border-[#ebe6de] bg-white p-[18px]">
-              <p className="text-[13px] leading-[normal] font-normal text-[#605a54]">
-                •••• •••• •••• 4242
-              </p>
-              <div className="flex flex-col text-[12px] leading-[normal] text-black">
-                <p className="font-normal">Expires 08/29</p>
-                <p className="font-bold">VISA</p>
-              </div>
-            </div>
-          ) : null}
           <h2 className="font-[family-name:var(--font-instrument-serif)] text-[32px] leading-[normal] text-[#1a1a1a] lg:text-[36px]">
             Order Summary
           </h2>

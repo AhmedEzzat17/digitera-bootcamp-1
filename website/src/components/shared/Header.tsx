@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: productPaths.list, label: "Shop" },
   { href: productPaths.list, label: "Categories" },
-  { href: productPaths.list, label: "The Atelier" },
 ] as const;
 
 export function Header() {
@@ -69,9 +68,6 @@ export function Header() {
                 className="w-full bg-transparent text-[12px] leading-[normal] text-[#1a1a1a] outline-none placeholder:text-[#605a54]"
               />
             </form>
-            <span className="hidden lg:inline-flex" aria-hidden="true">
-              <img src="/icons/account.svg" alt="" width={20} height={20} />
-            </span>
             <CartNavLink />
           </div>
         </div>

@@ -51,19 +51,22 @@ export function CartItem({
           </p>
         ) : null}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-4 rounded border border-[#ebe6de] px-3 py-[9px] text-[12px] leading-[normal]">
+          <div className="flex items-center rounded border border-[#ebe6de] text-[12px] leading-[normal]">
             <button
               type="button"
-              className="font-normal text-[#605a54]"
+              className="inline-flex h-10 w-10 items-center justify-center font-normal text-[#605a54] disabled:cursor-default disabled:opacity-40"
               aria-label={`Decrease quantity of ${line.name}`}
+              disabled={line.quantity <= 1}
               onClick={() => onDecrement(line.id)}
             >
               −
             </button>
-            <span className="font-semibold text-black">{line.quantity}</span>
+            <span className="min-w-4 text-center font-semibold text-black">
+              {line.quantity}
+            </span>
             <button
               type="button"
-              className="font-normal text-[#605a54]"
+              className="inline-flex h-10 w-10 items-center justify-center font-normal text-[#605a54]"
               aria-label={`Increase quantity of ${line.name}`}
               onClick={() => onIncrement(line.id)}
             >
@@ -72,7 +75,7 @@ export function CartItem({
           </div>
           <button
             type="button"
-            className="text-[11px] leading-[normal] font-normal text-[#605a54] uppercase underline"
+            className="cursor-pointer text-[11px] leading-[normal] font-normal text-[#605a54] uppercase underline"
             onClick={() => onRemove(line.id)}
           >
             Remove

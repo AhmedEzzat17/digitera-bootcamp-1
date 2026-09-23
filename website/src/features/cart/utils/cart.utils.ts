@@ -23,7 +23,7 @@ export function getCartQuantity(lines: CartLine[]): number {
 export const CART_DELIVERY_FEE = 10;
 
 export function getCartDelivery(lines: CartLine[]): number {
-  return lines.length === 0 ? 0 : CART_DELIVERY_FEE;
+  return lines.some((line) => line.quantity > 0) ? CART_DELIVERY_FEE : 0;
 }
 
 export function formatCartAmount(amount: number): string {

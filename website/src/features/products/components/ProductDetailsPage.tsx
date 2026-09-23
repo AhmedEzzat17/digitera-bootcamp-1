@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { ProductDetails } from "@/features/products/components/ProductDetails";
 import { ProductImages } from "@/features/products/components/ProductImages";
@@ -14,6 +14,7 @@ import { useProduct } from "@/features/products/hooks/useProduct";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { productPaths } from "@/features/products/paths";
 import type { Product } from "@/features/products/types/product.types";
+import { cn } from "@/lib/utils/cn";
 
 const VOLUME_PRESETS = [
   { id: "30 ml", label: "30 ml", ratio: 140 / 220 },
@@ -104,19 +105,51 @@ function GiftWrapSwitch({
       role="switch"
       aria-checked={enabled}
       aria-label="Complimentary signature gift wrapping"
-      className="shrink-0"
+      className={cn(
+        "relative h-6 w-11 shrink-0 rounded-full",
+        enabled ? "bg-[#c5a880]" : "bg-[#ebe6de]",
+      )}
       onClick={() => onChange(!enabled)}
     >
-      {enabled ? (
-        <img src="/icons/switch.svg" alt="" width={44} height={24} />
-      ) : (
-        <span className="relative block h-6 w-11 rounded-full bg-[#ebe6de]">
-          <span className="absolute top-0.5 left-0.5 size-5 rounded-full bg-white" />
-        </span>
-      )}
+      <span
+        className={cn(
+          "absolute top-0.5 size-5 rounded-full bg-white",
+          enabled ? "left-[22px]" : "left-0.5",
+        )}
+      />
     </button>
   );
 }
+
+const RelatedProducts = memo(function RelatedProducts({
+  products,
+  isLoading,
+}: {
+  products: Product[];
+  isLoading: boolean;
+}) {
+  return (
+    <section className="flex flex-col items-start gap-8 bg-[#f4f0eb] px-4 py-16 sm:px-6 md:px-10 lg:gap-12 lg:px-20 lg:py-[100px]">
+      <div className="flex w-full flex-col items-center gap-3 text-center">
+        <h2 className="w-full font-[family-name:var(--font-instrument-serif)] text-[36px] leading-[normal] text-[#1a1a1a] sm:text-[48px]">
+          Olfactory Companions
+        </h2>
+        <p className="w-full text-[14px] leading-[normal] font-normal text-[#605a54]">
+          FRAGRANCES OF SYNONYMOUS SOPHISTICATION
+        </p>
+      </div>
+      {isLoading ? (
+        <p className="text-sm text-[#605a54]">Loading fragrances...</p>
+      ) : (
+        <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          {products.map((item) => (
+            <ProductCard key={item.id} product={item} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+});
 
 export function ProductDetailsPage({
   productId,
@@ -178,25 +211,29 @@ export function ProductDetailsPage({
     return options;
   }, [giftWrap, groups, resolvedOptions]);
 
-  const catalog = relatedQuery.data?.items ?? [];
-  const companionIds = [
-    "fleur-de-lune",
-    "noir-cocoon",
-    "sol-dor",
-    "rose-absolute",
-  ];
-  const companions = companionIds
-    .filter((id) => id !== productId)
-    .map((id) => catalog.find((item) => item.id === id))
-    .filter((item): item is Product => Boolean(item));
-  const related = [
-    ...companions,
-    ...catalog.filter(
-      (item) =>
-        item.id !== productId &&
-        !companions.some((companion) => companion.id === item.id),
-    ),
-  ].slice(0, 4);
+  const catalog = relatedQuery.data?.items;
+  const related = useMemo(() => {
+    const items = catalog ?? [];
+    const companionIds = [
+      "fleur-de-lune",
+      "noir-cocoon",
+      "sol-dor",
+      "rose-absolute",
+    ];
+    const companions = companionIds
+      .filter((id) => id !== productId)
+      .map((id) => items.find((item) => item.id === id))
+      .filter((item): item is Product => Boolean(item));
+
+    return [
+      ...companions,
+      ...items.filter(
+        (item) =>
+          item.id !== productId &&
+          !companions.some((companion) => companion.id === item.id),
+      ),
+    ].slice(0, 4);
+  }, [catalog, productId]);
 
   if (productQuery.isLoading) {
     return (
@@ -244,24 +281,25 @@ export function ProductDetailsPage({
             <GiftWrapSwitch enabled={giftWrap} onChange={setGiftWrap} />
           </div>
           <div className="flex w-full items-center gap-4">
-            <div className="flex shrink-0 items-center gap-5 rounded border border-[#ebe6de] px-4 py-3.5">
+            <div className="flex shrink-0 items-center rounded border border-[#ebe6de]">
               <button
                 type="button"
                 aria-label="Decrease quantity"
-                className="text-[16px] leading-[normal] font-normal text-[#605a54]"
+                className="inline-flex h-12 w-11 items-center justify-center text-[16px] leading-none font-normal text-[#605a54] disabled:opacity-40"
+                disabled={quantity <= 1}
                 onClick={() =>
                   setQuantity((current) => Math.max(1, current - 1))
                 }
               >
                 -
               </button>
-              <span className="text-[14px] leading-[normal] font-semibold text-[#1a1a1a]">
+              <span className="min-w-4 text-center text-[14px] leading-[normal] font-semibold text-[#1a1a1a]">
                 {quantity}
               </span>
               <button
                 type="button"
                 aria-label="Increase quantity"
-                className="text-[16px] leading-[normal] font-normal text-[#605a54]"
+                className="inline-flex h-12 w-11 items-center justify-center text-[16px] leading-none font-normal text-[#605a54]"
                 onClick={() => setQuantity((current) => current + 1)}
               >
                 +
@@ -299,25 +337,7 @@ export function ProductDetailsPage({
           </div>
         </div>
       </div>
-      <section className="flex flex-col items-start gap-8 bg-[#f4f0eb] px-4 py-16 sm:px-6 md:px-10 lg:gap-12 lg:px-20 lg:py-[100px]">
-        <div className="flex w-full flex-col items-center gap-3 text-center">
-          <h2 className="w-full font-[family-name:var(--font-instrument-serif)] text-[36px] leading-[normal] text-[#1a1a1a] sm:text-[48px]">
-            Olfactory Companions
-          </h2>
-          <p className="w-full text-[14px] leading-[normal] font-normal text-[#605a54]">
-            FRAGRANCES OF SYNONYMOUS SOPHISTICATION
-          </p>
-        </div>
-        {relatedQuery.isLoading ? (
-          <p className="text-sm text-[#605a54]">Loading fragrances...</p>
-        ) : (
-          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
-          </div>
-        )}
-      </section>
+      <RelatedProducts products={related} isLoading={relatedQuery.isLoading} />
     </article>
   );
 }
