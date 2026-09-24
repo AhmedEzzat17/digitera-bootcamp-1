@@ -171,6 +171,31 @@ const rangeInputClassName =
   "pointer-events-none absolute inset-x-0 translate-y-1/2 top-[2px] h-4 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#c5a880] [&::-moz-range-thumb]:bg-white [&::-moz-range-track]:bg-transparent [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#c5a880] [&::-webkit-slider-thumb]:bg-white";
 
 
+function paintPriceRange(
+  fill: HTMLDivElement | null,
+  minLabel: HTMLParagraphElement | null,
+  maxLabel: HTMLParagraphElement | null,
+  min: number,
+  max: number,
+) {
+  const span = PRICE_FILTER_MAX - PRICE_FILTER_MIN;
+  const start = ((min - PRICE_FILTER_MIN) / span) * 100;
+  const end = ((max - PRICE_FILTER_MIN) / span) * 100;
+
+  if (fill) {
+    fill.style.left = `${start}%`;
+    fill.style.width = `${Math.max(end - start, 0)}%`;
+  }
+
+  if (minLabel) {
+    minLabel.textContent = formatWholePrice(min);
+  }
+
+  if (maxLabel) {
+    maxLabel.textContent = formatWholePrice(max);
+  }
+}
+
 function PriceRangeFilter({
   minPrice,
   maxPrice,
@@ -180,29 +205,73 @@ function PriceRangeFilter({
   maxPrice: number;
   onChange: (minPrice: number, maxPrice: number) => void;
 }) {
-  const [min, setMin] = useState(minPrice);
-  const [max, setMax] = useState(maxPrice);
-  const [dragging, setDragging] = useState(false);
+  const minInputRef = useRef<HTMLInputElement>(null);
+  const maxInputRef = useRef<HTMLInputElement>(null);
+  const fillRef = useRef<HTMLDivElement>(null);
+  const minLabelRef = useRef<HTMLParagraphElement>(null);
+  const maxLabelRef = useRef<HTMLParagraphElement>(null);
   const minRef = useRef(minPrice);
   const maxRef = useRef(maxPrice);
+  const committedMinRef = useRef(minPrice);
+  const committedMaxRef = useRef(maxPrice);
+  const draggingRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const span = PRICE_FILTER_MAX - PRICE_FILTER_MIN;
-  const start = ((min - PRICE_FILTER_MIN) / span) * 100;
-  const end = ((max - PRICE_FILTER_MIN) / span) * 100;
+  const start = ((minPrice - PRICE_FILTER_MIN) / span) * 100;
+  const end = ((maxPrice - PRICE_FILTER_MIN) / span) * 100;
 
   useEffect(() => {
-    if (dragging) {
+    if (draggingRef.current) {
       return;
     }
 
     minRef.current = minPrice;
     maxRef.current = maxPrice;
-    setMin(minPrice);
-    setMax(maxPrice);
-  }, [dragging, maxPrice, minPrice]);
+    committedMinRef.current = minPrice;
+    committedMaxRef.current = maxPrice;
+
+    if (minInputRef.current) {
+      minInputRef.current.value = String(minPrice);
+    }
+
+    if (maxInputRef.current) {
+      maxInputRef.current.value = String(maxPrice);
+    }
+
+    paintPriceRange(fillRef.current, minLabelRef.current, maxLabelRef.current, minPrice, maxPrice);
+  }, [maxPrice, minPrice]);
 
   const commit = () => {
-    setDragging(false);
-    onChange(minRef.current, maxRef.current);
+    draggingRef.current = false;
+
+    if (
+      minRef.current === committedMinRef.current &&
+      maxRef.current === committedMaxRef.current
+    ) {
+      return;
+    }
+
+    committedMinRef.current = minRef.current;
+    committedMaxRef.current = maxRef.current;
+    onChangeRef.current(minRef.current, maxRef.current);
+  };
+
+  const beginDrag = () => {
+    if (draggingRef.current) {
+      return;
+    }
+
+    draggingRef.current = true;
+
+    const endDrag = () => {
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+      commit();
+    };
+
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
   };
 
   return (
@@ -214,49 +283,72 @@ function PriceRangeFilter({
         <div className="relative flex h-4 w-full items-center">
           <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 bg-[#ebe6de]" />
           <div
+            ref={fillRef}
             className="absolute top-1/2 h-1 -translate-y-1/2 bg-[#c5a880]"
             style={{ left: `${start}%`, width: `${Math.max(end - start, 0)}%` }}
           />
           <input
+            ref={minInputRef}
             type="range"
             min={PRICE_FILTER_MIN}
             max={PRICE_FILTER_MAX}
             step={PRICE_STEP}
-            value={min}
+            defaultValue={minPrice}
             aria-label="Minimum price"
             className={cn(rangeInputClassName, "price-range-input z-20")}
             style={{ transform: "translateY(calc(-50% - 8px))" }}
-            onPointerDown={() => setDragging(true)}
-            onChange={(event) => {
-              const next = Math.min(Number(event.target.value), maxRef.current - PRICE_STEP);
+            onPointerDown={beginDrag}
+            onInput={(event) => {
+              const next = Math.min(Number(event.currentTarget.value), maxRef.current - PRICE_STEP);
               minRef.current = next;
-              setMin(next);
+
+              if (next !== Number(event.currentTarget.value)) {
+                event.currentTarget.value = String(next);
+              }
+
+              paintPriceRange(
+                fillRef.current,
+                minLabelRef.current,
+                maxLabelRef.current,
+                next,
+                maxRef.current,
+              );
             }}
-            onPointerUp={commit}
             onKeyUp={commit}
           />
           <input
+            ref={maxInputRef}
             type="range"
             min={PRICE_FILTER_MIN}
             max={PRICE_FILTER_MAX}
             step={PRICE_STEP}
-            value={max}
+            defaultValue={maxPrice}
             aria-label="Maximum price"
             className={cn(rangeInputClassName, "price-range-input z-30")}
             style={{ transform: "translateY(calc(-50% - 8px))" }}
-            onPointerDown={() => setDragging(true)}
-            onChange={(event) => {
-              const next = Math.max(Number(event.target.value), minRef.current + PRICE_STEP);
+            onPointerDown={beginDrag}
+            onInput={(event) => {
+              const next = Math.max(Number(event.currentTarget.value), minRef.current + PRICE_STEP);
               maxRef.current = next;
-              setMax(next);
+
+              if (next !== Number(event.currentTarget.value)) {
+                event.currentTarget.value = String(next);
+              }
+
+              paintPriceRange(
+                fillRef.current,
+                minLabelRef.current,
+                maxLabelRef.current,
+                minRef.current,
+                next,
+              );
             }}
-            onPointerUp={commit}
             onKeyUp={commit}
           />
         </div>
         <div className="flex w-full items-start justify-between text-[12px] font-normal whitespace-nowrap text-[#1a1a1a]">
-          <p>{formatWholePrice(min)}</p>
-          <p>{formatWholePrice(max)}</p>
+          <p ref={minLabelRef}>{formatWholePrice(minPrice)}</p>
+          <p ref={maxLabelRef}>{formatWholePrice(maxPrice)}</p>
         </div>
       </div>
     </div>
