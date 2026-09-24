@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: productPaths.list, label: "Shop" },
   { href: productPaths.list, label: "Categories" },
+  { href: productPaths.list, label: "The Atelier" },
 ] as const;
 
 const searchFieldClassName =
@@ -121,6 +122,9 @@ export function Header() {
             >
               <SearchForm className="hidden w-[200px] items-center gap-2 rounded-full border border-[#ebe6de] px-3 py-2 lg:flex" />
             </Suspense>
+            <button type="button" aria-label="Account" className="hidden lg:block">
+              <img src="/icons/account.svg" alt="" width={20} height={20} />
+            </button>
             <CartNavLink />
           </div>
         </div>

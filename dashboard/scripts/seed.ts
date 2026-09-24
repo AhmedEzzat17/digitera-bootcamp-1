@@ -1,6 +1,9 @@
+import {createReadStream, existsSync} from 'node:fs'
+import {resolve} from 'node:path'
 import {getCliClient} from 'sanity/cli'
 
 const client = getCliClient({apiVersion: '2026-09-23'})
+const publicImagesPath = resolve(process.cwd(), '../website/public/images/products')
 
 const taxonomies = {
   category: [
@@ -33,6 +36,7 @@ const products = [
     category: 'pure-extractions',
     scentFamily: 'floral',
     occasion: 'personal-use',
+    image: 'fleur-de-lune.png',
   },
   {
     name: 'Santal Parchment',
@@ -43,6 +47,7 @@ const products = [
     category: 'pure-extractions',
     scentFamily: 'woody',
     occasion: 'personal-use',
+    image: 'santal-parchment.png',
   },
   {
     name: 'Noir Cocoon',
@@ -53,6 +58,7 @@ const products = [
     category: 'private-reserve',
     scentFamily: 'oriental',
     occasion: 'wedding',
+    image: 'noir-cocoon.png',
   },
   {
     name: "Sol d'Or",
@@ -63,6 +69,7 @@ const products = [
     category: 'pure-extractions',
     scentFamily: 'fresh',
     occasion: 'personal-use',
+    image: 'sol-dor.png',
   },
   {
     name: 'Atelier Oud',
@@ -73,6 +80,7 @@ const products = [
     category: 'atelier-oils',
     scentFamily: 'woody',
     occasion: 'gift-sets',
+    image: 'atelier-oud.png',
   },
   {
     name: 'Rose Absolute',
@@ -83,6 +91,7 @@ const products = [
     category: 'private-reserve',
     scentFamily: 'floral',
     occasion: 'birthday',
+    image: 'rose-absolute.png',
   },
 ]
 
@@ -103,6 +112,20 @@ async function ensureTaxonomy(type: string, title: string, slug: string) {
   return created._id
 }
 
+async function uploadProductImage(filename: string) {
+  const imagePath = resolve(publicImagesPath, filename)
+
+  if (!existsSync(imagePath)) {
+    throw new Error(`Missing product image: ${imagePath}`)
+  }
+
+  const asset = await client.assets.upload('image', createReadStream(imagePath), {
+    filename,
+  })
+
+  return {_type: 'image', asset: {_type: 'reference', _ref: asset._id}}
+}
+
 async function seed() {
   const ids = new Map<string, string>()
 
@@ -121,6 +144,17 @@ async function seed() {
     )
 
     if (existingId) {
+      const hasImages = await client.fetch<boolean>(
+        `defined(*[_id == $id][0].images[0])`,
+        {id: existingId},
+      )
+
+      if (!hasImages) {
+        const image = await uploadProductImage(product.image)
+        await client.patch(existingId).set({images: [image]}).commit()
+        console.log(`product ${product.slug} images added -> ${existingId}`)
+      }
+
       console.log(`product ${product.slug} already exists -> ${existingId}`)
       continue
     }
@@ -133,6 +167,7 @@ async function seed() {
       throw new Error(`Missing taxonomy for ${product.slug}`)
     }
 
+    const image = await uploadProductImage(product.image)
     const created = await client.create({
       _type: 'product',
       name: product.name,
@@ -143,6 +178,7 @@ async function seed() {
       category: {_type: 'reference', _ref: categoryId},
       scentFamily: {_type: 'reference', _ref: scentFamilyId},
       occasion: {_type: 'reference', _ref: occasionId},
+      images: [image],
       options: [],
     })
 

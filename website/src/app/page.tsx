@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
-import { productPaths } from "@/features/products";
+import { HomePage } from "@/features/home/components/HomePage";
 
 export default function HomeRoute() {
-  redirect(productPaths.list);
+  return <HomePage />;
 }
