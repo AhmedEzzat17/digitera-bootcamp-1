@@ -1,11 +1,15 @@
 import { urlFor } from "@/sanity/image";
 import { client } from "@/sanity/client";
-import { PRODUCT_QUERY, PRODUCTS_QUERY } from "@/sanity/queries";
+import { PRODUCT_QUERY, productsListQuery } from "@/sanity/queries";
 import type { ProductsService } from "@/features/products/services/products.service";
 import type {
   Product,
   ProductOption,
 } from "@/features/products/types/product.types";
+import {
+  DEFAULT_PRODUCT_SORT,
+  PRODUCT_PAGE_SIZE,
+} from "@/features/products/utils/product.utils";
 
 type SanityImage = {
   alt?: string | null;
@@ -72,16 +76,31 @@ function toProduct(document: SanityProduct | null): Product | null {
 
 export const sanityProductsService: ProductsService = {
   async list(query) {
-    const documents = await client.fetch(PRODUCTS_QUERY);
-    const items = documents.map((document) => toProduct(document)).filter(
-      (product): product is Product => product !== null,
-    );
+    const pageSize =
+      query.pageSize && query.pageSize > 0
+        ? Math.floor(query.pageSize)
+        : PRODUCT_PAGE_SIZE;
+    const page = query.page && query.page > 0 ? Math.floor(query.page) : 1;
+    const sort = query.sort ?? DEFAULT_PRODUCT_SORT;
+    const start = (page - 1) * pageSize;
+    const result = await client.fetch<{
+      items: Array<SanityProduct | null> | null;
+      total: number | null;
+    }>(productsListQuery(sort, start, start + pageSize), {
+      search: query.search?.trim() ? `${query.search.trim()}*` : "",
+      categories: query.categories ?? [],
+      scentFamilies: query.scentFamilies ?? [],
+      occasions: query.occasions ?? [],
+    });
+    const items = (result.items ?? [])
+      .map((document) => toProduct(document))
+      .filter((product): product is Product => product !== null);
 
     return {
       items,
-      total: items.length,
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 8,
+      total: result.total ?? items.length,
+      page,
+      pageSize,
     };
   },
 

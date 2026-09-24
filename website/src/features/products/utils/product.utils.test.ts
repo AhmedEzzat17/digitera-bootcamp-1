@@ -1,4 +1,9 @@
-import { formatPrice, parseProductListQuery } from "./product.utils";
+import { mockProducts } from "@/features/products/services/products.mock-data";
+import {
+  formatPrice,
+  parseProductListQuery,
+  selectProducts,
+} from "./product.utils";
 
 describe("formatPrice", () => {
   it("formats a USD amount", () => {
@@ -11,17 +16,51 @@ describe("parseProductListQuery", () => {
     expect(
       parseProductListQuery({
         search: "mug",
-        category: "home",
+        category: ["home", "garden"],
+        scentFamily: "woody",
+        occasion: "wedding,birthday",
         sort: "price-asc",
         page: "2",
         pageSize: "4",
       }),
     ).toEqual({
       search: "mug",
-      category: "home",
+      categories: ["home", "garden"],
+      scentFamilies: ["woody"],
+      occasions: ["wedding", "birthday"],
       sort: "price-asc",
       page: 2,
-      pageSize: 4,
+      pageSize: 6,
     });
+  });
+});
+
+describe("selectProducts", () => {
+  it("searches, filters, sorts, and pages six products", () => {
+    const searched = selectProducts(mockProducts, { search: "rose" });
+    expect(searched.items.map((product) => product.id)).toEqual(["rose-absolute"]);
+    expect(searched.total).toBe(1);
+
+    const woody = selectProducts(mockProducts, {
+      scentFamilies: ["woody"],
+      sort: "price-asc",
+    });
+    expect(woody.items.map((product) => product.name)).toEqual([
+      "Santal Parchment",
+      "Atelier Oud",
+    ]);
+
+    const page = selectProducts(
+      Array.from({ length: 8 }, (_, index) => ({
+        ...mockProducts[0],
+        id: `product-${index}`,
+        name: `Product ${index}`,
+        price: index,
+      })),
+      { sort: "price-asc", page: 2 },
+    );
+    expect(page.items).toHaveLength(2);
+    expect(page.pageSize).toBe(6);
+    expect(page.total).toBe(8);
   });
 });

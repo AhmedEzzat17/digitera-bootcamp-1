@@ -10,7 +10,11 @@ function toQueryString(query: ProductListQuery): string {
   const params = new URLSearchParams();
 
   if (query.search) params.set("search", query.search);
-  if (query.category) params.set("category", query.category);
+  for (const category of query.categories ?? []) params.append("category", category);
+  for (const scentFamily of query.scentFamilies ?? []) {
+    params.append("scentFamily", scentFamily);
+  }
+  for (const occasion of query.occasions ?? []) params.append("occasion", occasion);
   if (query.sort) params.set("sort", query.sort);
   if (query.page) params.set("page", String(query.page));
   if (query.pageSize) params.set("pageSize", String(query.pageSize));

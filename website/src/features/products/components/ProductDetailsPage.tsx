@@ -156,7 +156,7 @@ export function ProductDetailsPage({
   actions,
 }: ProductDetailsPageProps) {
   const productQuery = useProduct(productId);
-  const relatedQuery = useProducts({});
+  const relatedQuery = useProducts({ page: 1, pageSize: 50 });
   const product = productQuery.data;
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
     {},

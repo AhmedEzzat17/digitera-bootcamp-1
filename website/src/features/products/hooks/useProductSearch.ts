@@ -1,15 +1,20 @@
 "use client";
 
-/**
- * US-02: keep search state close to the products feature.
- * Wire this hook to the listing query and URL params during implementation.
- */
+import { useRouter } from "next/navigation";
+import { productPaths } from "@/features/products/paths";
+
 export function useProductSearch(search = "") {
+  const router = useRouter();
+
   return {
     search,
-    // TODO(US-02): update the listing query / URL when search changes.
     setSearch: (value: string) => {
-      void value;
+      const next = value.trim();
+      router.push(
+        next
+          ? `${productPaths.list}?search=${encodeURIComponent(next)}`
+          : productPaths.list,
+      );
     },
   };
 }

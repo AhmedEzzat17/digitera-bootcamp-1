@@ -1,17 +1,19 @@
 "use client";
 
-import type { ProductSort } from "@/features/products/types/product.types";
+import { useUpdateProductListQuery } from "@/features/products/hooks/useUpdateProductListQuery";
+import type {
+  ProductListQuery,
+  ProductSort,
+} from "@/features/products/types/product.types";
+import { DEFAULT_PRODUCT_SORT } from "@/features/products/utils/product.utils";
 
-/**
- * US-01: keep sort state close to the products feature.
- * Wire this hook to the listing query and URL params during implementation.
- */
-export function useProductSort(sort?: ProductSort) {
+export function useProductSort(query: ProductListQuery = {}) {
+  const update = useUpdateProductListQuery(query);
+
   return {
-    sort,
-    // TODO(US-01): update the listing query / URL when sort changes.
-    setSort: (value: ProductSort | undefined) => {
-      void value;
+    sort: query.sort ?? DEFAULT_PRODUCT_SORT,
+    setSort: (value: ProductSort) => {
+      update({ sort: value === DEFAULT_PRODUCT_SORT ? undefined : value });
     },
   };
 }

@@ -2,7 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 import { CartNavLink } from "@/features/cart";
 import { productPaths } from "@/features/products";
 
@@ -11,6 +12,55 @@ const NAV_LINKS = [
   { href: productPaths.list, label: "Shop" },
   { href: productPaths.list, label: "Categories" },
 ] as const;
+
+const searchFieldClassName =
+  "w-full bg-transparent text-[12px] leading-[normal] text-[#1a1a1a] outline-none placeholder:text-[#605a54]";
+
+function SearchForm({
+  className,
+  onSearched,
+}: {
+  className: string;
+  onSearched?: () => void;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = pathname === productPaths.list ? (searchParams.get("search") ?? "") : "";
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = String(new FormData(event.currentTarget).get("search") ?? "").trim();
+    const params = new URLSearchParams(
+      pathname === productPaths.list ? searchParams.toString() : "",
+    );
+
+    if (value) {
+      params.set("search", value);
+    } else {
+      params.delete("search");
+    }
+
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${productPaths.list}?${query}` : productPaths.list);
+    onSearched?.();
+  }
+
+  return (
+    <form action={productPaths.list} method="get" className={className} onSubmit={onSubmit}>
+      <img src="/icons/search.svg" alt="" width={14} height={14} />
+      <input
+        key={search}
+        name="search"
+        defaultValue={search}
+        placeholder="Search fragrances..."
+        aria-label="Search fragrances"
+        className={searchFieldClassName}
+      />
+    </form>
+  );
+}
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -56,23 +106,32 @@ export function Header() {
             ODORATUS
           </Link>
           <div className="flex items-center justify-self-end gap-7">
-            <form
-              action={productPaths.list}
-              className="hidden w-[200px] items-center gap-2 rounded-full border border-[#ebe6de] px-3 py-2 lg:flex"
+            <Suspense
+              fallback={
+                <div className="hidden w-[200px] items-center gap-2 rounded-full border border-[#ebe6de] px-3 py-2 lg:flex">
+                  <img src="/icons/search.svg" alt="" width={14} height={14} />
+                  <input
+                    name="search"
+                    placeholder="Search fragrances..."
+                    aria-label="Search fragrances"
+                    className={searchFieldClassName}
+                  />
+                </div>
+              }
             >
-              <img src="/icons/search.svg" alt="" width={14} height={14} />
-              <input
-                name="search"
-                placeholder="Search fragrances..."
-                aria-label="Search fragrances"
-                className="w-full bg-transparent text-[12px] leading-[normal] text-[#1a1a1a] outline-none placeholder:text-[#605a54]"
-              />
-            </form>
+              <SearchForm className="hidden w-[200px] items-center gap-2 rounded-full border border-[#ebe6de] px-3 py-2 lg:flex" />
+            </Suspense>
             <CartNavLink />
           </div>
         </div>
         {menuOpen ? (
           <nav className="absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-b border-[#ebe6de] bg-[#faf8f5] px-5 py-5 lg:hidden">
+            <Suspense>
+              <SearchForm
+                className="flex w-full items-center gap-2 rounded-full border border-[#ebe6de] bg-white px-3 py-2"
+                onSearched={() => setMenuOpen(false)}
+              />
+            </Suspense>
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.label}

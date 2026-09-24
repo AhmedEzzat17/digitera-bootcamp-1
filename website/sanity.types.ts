@@ -251,32 +251,6 @@ export type AllSanitySchemaTypes =
   | Geopoint;
 
 // Source: ../website/src/sanity/queries.ts
-// Variable: PRODUCTS_QUERY
-// Query: *[_type == "product" && defined(slug.current)] | order(_createdAt asc) {  _id,  name,  "slug": slug.current,  description,  notes,  price,  images[]{    alt,    asset,    crop,    hotspot  },  "category": category->slug.current,  "scentFamily": scentFamily->slug.current,  "occasion": occasion->slug.current,  options[]{    _key,    name,    values  }}
-export type PRODUCTS_QUERY_RESULT = Array<{
-  _id: string;
-  name: string | null;
-  slug: string | null;
-  description: string | null;
-  notes: string | null;
-  price: number | null;
-  images: Array<{
-    alt: string | null;
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-  }> | null;
-  category: string | null;
-  scentFamily: string | null;
-  occasion: string | null;
-  options: Array<{
-    _key: string;
-    name: string | null;
-    values: Array<string> | null;
-  }> | null;
-}>;
-
-// Source: ../website/src/sanity/queries.ts
 // Variable: PRODUCT_QUERY
 // Query: *[_type == "product" && slug.current == $slug][0] {  _id,  name,  "slug": slug.current,  description,  notes,  price,  images[]{    alt,    asset,    crop,    hotspot  },  "category": category->slug.current,  "scentFamily": scentFamily->slug.current,  "occasion": occasion->slug.current,  options[]{    _key,    name,    values  }}
 export type PRODUCT_QUERY_RESULT = {
@@ -305,7 +279,6 @@ export type PRODUCT_QUERY_RESULT = {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "product" && defined(slug.current)] | order(_createdAt asc) {\n  _id,\n  name,\n  "slug": slug.current,\n  description,\n  notes,\n  price,\n  images[]{\n    alt,\n    asset,\n    crop,\n    hotspot\n  },\n  "category": category->slug.current,\n  "scentFamily": scentFamily->slug.current,\n  "occasion": occasion->slug.current,\n  options[]{\n    _key,\n    name,\n    values\n  }\n}\n': PRODUCTS_QUERY_RESULT;
     '\n  *[_type == "product" && slug.current == $slug][0] {\n  _id,\n  name,\n  "slug": slug.current,\n  description,\n  notes,\n  price,\n  images[]{\n    alt,\n    asset,\n    crop,\n    hotspot\n  },\n  "category": category->slug.current,\n  "scentFamily": scentFamily->slug.current,\n  "occasion": occasion->slug.current,\n  options[]{\n    _key,\n    name,\n    values\n  }\n}\n': PRODUCT_QUERY_RESULT;
   }
 }

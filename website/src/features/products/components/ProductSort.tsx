@@ -1,9 +1,13 @@
 "use client";
 
-import type { ProductSort } from "@/features/products/types/product.types";
+import { useProductSort } from "@/features/products/hooks/useProductSort";
+import type {
+  ProductListQuery,
+  ProductSort,
+} from "@/features/products/types/product.types";
 
 type ProductSortControlProps = {
-  value?: ProductSort;
+  query: ProductListQuery;
   availableCount: number;
 };
 
@@ -15,9 +19,10 @@ const SORT_OPTIONS: Array<{ value: ProductSort; label: string }> = [
 ];
 
 export function ProductSortControl({
-  value = "price-desc",
+  query,
   availableCount,
 }: ProductSortControlProps) {
+  const { sort, setSort } = useProductSort(query);
   return (
     <div className="flex w-full flex-col gap-3 border-b border-solid border-[#ebe6de] pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <p className="text-[12px] font-normal uppercase text-[#605a54]">
@@ -29,7 +34,8 @@ export function ProductSortControl({
         </span>
         <select
           aria-label="Sort products"
-          defaultValue={value}
+          value={sort}
+          onChange={(event) => setSort(event.target.value as ProductSort)}
           className="cursor-pointer appearance-none bg-transparent pr-5 text-[12px] font-semibold whitespace-nowrap text-[#c5a880] outline-none"
         >
           {SORT_OPTIONS.map((option) => (

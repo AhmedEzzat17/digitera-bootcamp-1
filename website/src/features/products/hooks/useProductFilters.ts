@@ -1,15 +1,29 @@
 "use client";
 
-/**
- * US-03: keep filter state close to the products feature.
- * Wire this hook to the listing query and URL params during implementation.
- */
-export function useProductFilters(category?: string) {
+import { useUpdateProductListQuery } from "@/features/products/hooks/useUpdateProductListQuery";
+import type { ProductListQuery } from "@/features/products/types/product.types";
+
+function toggle(values: string[] | undefined, id: string) {
+  const current = values ?? [];
+  const next = current.includes(id)
+    ? current.filter((value) => value !== id)
+    : [...current, id];
+
+  return next.length > 0 ? next : undefined;
+}
+
+export function useProductFilters(query: ProductListQuery = {}) {
+  const update = useUpdateProductListQuery(query);
+
   return {
-    category,
-    // TODO(US-03): update the listing query / URL when filters change.
-    setCategory: (value: string | undefined) => {
-      void value;
-    },
+    categories: query.categories ?? [],
+    scentFamilies: query.scentFamilies ?? [],
+    occasions: query.occasions ?? [],
+    toggleCategory: (id: string) =>
+      update({ categories: toggle(query.categories, id) }),
+    toggleScentFamily: (id: string) =>
+      update({ scentFamilies: toggle(query.scentFamilies, id) }),
+    toggleOccasion: (id: string) =>
+      update({ occasions: toggle(query.occasions, id) }),
   };
 }

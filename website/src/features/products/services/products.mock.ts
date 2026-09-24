@@ -1,5 +1,6 @@
 import { mockProducts } from "@/features/products/services/products.mock-data";
 import type { ProductsService } from "@/features/products/services/products.service";
+import { selectProducts } from "@/features/products/utils/product.utils";
 
 /**
  * In-memory catalog used while no backend exists.
@@ -7,13 +8,7 @@ import type { ProductsService } from "@/features/products/services/products.serv
  */
 export const mockProductsService: ProductsService = {
   async list(query) {
-    // TODO(US-01, US-02, US-03): apply search, filters, sort, and pagination.
-    return {
-      items: mockProducts,
-      total: mockProducts.length,
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 8,
-    };
+    return selectProducts(mockProducts, query);
   },
 
   async getById(id) {

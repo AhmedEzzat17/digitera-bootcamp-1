@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useProductFilters } from "@/features/products/hooks/useProductFilters";
+import type { ProductListQuery } from "@/features/products/types/product.types";
 import { cn } from "@/lib/utils/cn";
 
 type FilterOption = {
@@ -98,17 +100,16 @@ function FilterBlock({
   );
 }
 
-function toggleValue(values: string[], id: string) {
-  return values.includes(id)
-    ? values.filter((value) => value !== id)
-    : [...values, id];
-}
-
-export function ProductFilters() {
+export function ProductFilters({ query }: { query: ProductListQuery }) {
   const [open, setOpen] = useState(false);
-  const [categories, setCategories] = useState(["pure-extractions"]);
-  const [scentFamilies, setScentFamilies] = useState(["woody"]);
-  const [occasions, setOccasions] = useState<string[]>([]);
+  const {
+    categories,
+    scentFamilies,
+    occasions,
+    toggleCategory,
+    toggleScentFamily,
+    toggleOccasion,
+  } = useProductFilters(query);
   const selectedCount =
     categories.length + scentFamilies.length + occasions.length;
 
@@ -144,7 +145,7 @@ export function ProductFilters() {
           options={CATEGORIES}
           selected={categories}
           tone="gold"
-          onToggle={(id) => setCategories((current) => toggleValue(current, id))}
+          onToggle={toggleCategory}
         />
         <div className="h-px w-full bg-[#ebe6de]" />
         <FilterBlock
@@ -152,9 +153,7 @@ export function ProductFilters() {
           options={SCENT_FAMILIES}
           selected={scentFamilies}
           tone="ink"
-          onToggle={(id) =>
-            setScentFamilies((current) => toggleValue(current, id))
-          }
+          onToggle={toggleScentFamily}
         />
         <div className="h-px w-full bg-[#ebe6de]" />
         <FilterBlock
@@ -162,7 +161,7 @@ export function ProductFilters() {
           options={OCCASIONS}
           selected={occasions}
           tone="ink"
-          onToggle={(id) => setOccasions((current) => toggleValue(current, id))}
+          onToggle={toggleOccasion}
         />
         <div className="h-px w-full bg-[#ebe6de]" />
         <div className="flex w-full flex-col items-start gap-4">
