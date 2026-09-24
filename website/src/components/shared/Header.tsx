@@ -66,7 +66,7 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header>
+    <header className="sticky top-0 z-40 bg-[#faf8f5]">
       <div className="bg-[#1a1a1a] px-4 py-2.5 text-center lg:py-3">
         <p className="text-[9px] leading-[normal] font-normal text-white uppercase lg:text-[11px] lg:font-semibold">
           <span className="lg:hidden">

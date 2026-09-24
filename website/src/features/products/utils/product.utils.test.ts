@@ -63,4 +63,20 @@ describe("selectProducts", () => {
     expect(page.pageSize).toBe(6);
     expect(page.total).toBe(8);
   });
+
+  it("keeps products inside the selected price range", () => {
+    expect(parseProductListQuery({ minPrice: "150", maxPrice: "300" })).toMatchObject({
+      minPrice: 150,
+      maxPrice: 300,
+    });
+
+    const priced = selectProducts(mockProducts, {
+      maxPrice: 200,
+      sort: "price-asc",
+    });
+    expect(priced.items.map((product) => product.name)).toEqual([
+      "Sol d'Or",
+      "Fleur de Lune",
+    ]);
+  });
 });

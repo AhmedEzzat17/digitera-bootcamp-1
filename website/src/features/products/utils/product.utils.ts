@@ -9,6 +9,8 @@ import type {
 
 export const PRODUCT_PAGE_SIZE = 6;
 export const DEFAULT_PRODUCT_SORT: ProductSort = "price-desc";
+export const PRICE_FILTER_MIN = 0;
+export const PRICE_FILTER_MAX = 1000;
 
 const IMAGE_FALLBACKS: Record<string, string[]> = {
   "fleur-de-lune": ["/images/products/fleur-de-lune.png"],
@@ -38,6 +40,20 @@ const SORT_VALUES: ProductSort[] = [
   "price-asc",
   "price-desc",
 ];
+
+function priceBound(value: string | string[] | undefined): number | undefined {
+  const raw = firstValue(value);
+  if (!raw) {
+    return undefined;
+  }
+
+  const number = Number(raw);
+  if (!Number.isFinite(number)) {
+    return undefined;
+  }
+
+  return Math.min(PRICE_FILTER_MAX, Math.max(PRICE_FILTER_MIN, Math.round(number)));
+}
 
 function firstValue(
   value: string | string[] | undefined,
@@ -82,12 +98,16 @@ export function parseProductListQuery(
   const search = firstValue(searchParams.search)?.trim();
   const sortValue = firstValue(searchParams.sort);
   const pageValue = Number(firstValue(searchParams.page));
+  const minPrice = priceBound(searchParams.minPrice);
+  const maxPrice = priceBound(searchParams.maxPrice);
 
   return {
     search: search || undefined,
     categories: paramList(searchParams.category),
     scentFamilies: paramList(searchParams.scentFamily),
     occasions: paramList(searchParams.occasion),
+    minPrice: minPrice != null && minPrice > PRICE_FILTER_MIN ? minPrice : undefined,
+    maxPrice: maxPrice != null && maxPrice < PRICE_FILTER_MAX ? maxPrice : undefined,
     sort: SORT_VALUES.includes(sortValue as ProductSort)
       ? (sortValue as ProductSort)
       : undefined,
@@ -115,6 +135,14 @@ export function toProductListHref(query: ProductListQuery): string {
     params.append("occasion", value);
   }
 
+  if (query.minPrice != null && query.minPrice > PRICE_FILTER_MIN) {
+    params.set("minPrice", String(query.minPrice));
+  }
+
+  if (query.maxPrice != null && query.maxPrice < PRICE_FILTER_MAX) {
+    params.set("maxPrice", String(query.maxPrice));
+  }
+
   if (query.sort && query.sort !== DEFAULT_PRODUCT_SORT) {
     params.set("sort", query.sort);
   }
@@ -139,8 +167,13 @@ export function selectProducts(
   const filtered = products.filter((product) => {
     const haystack = `${product.name} ${product.notes} ${product.description}`.toLowerCase();
 
+    const minPrice = query.minPrice ?? PRICE_FILTER_MIN;
+    const maxPrice = query.maxPrice ?? PRICE_FILTER_MAX;
+
     return (
       terms.every((term) => haystack.includes(term)) &&
+      product.price >= minPrice &&
+      product.price <= maxPrice &&
       includesAny(query.categories, product.category) &&
       includesAny(query.scentFamilies, product.scentFamily) &&
       includesAny(query.occasions, product.occasion)

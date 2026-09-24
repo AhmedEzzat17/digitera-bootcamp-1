@@ -21,6 +21,6 @@ export function useUpdateProductListQuery(current: ProductListQuery = {}) {
       next.page = 1;
     }
 
-    router.push(toProductListHref(next));
+    router.push(toProductListHref(next), { scroll: false });
   };
 }

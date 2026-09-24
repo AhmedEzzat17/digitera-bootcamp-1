@@ -8,6 +8,8 @@ import type {
 } from "@/features/products/types/product.types";
 import {
   DEFAULT_PRODUCT_SORT,
+  PRICE_FILTER_MAX,
+  PRICE_FILTER_MIN,
   PRODUCT_PAGE_SIZE,
 } from "@/features/products/utils/product.utils";
 
@@ -91,6 +93,8 @@ export const sanityProductsService: ProductsService = {
       categories: query.categories ?? [],
       scentFamilies: query.scentFamilies ?? [],
       occasions: query.occasions ?? [],
+      minPrice: query.minPrice ?? PRICE_FILTER_MIN,
+      maxPrice: query.maxPrice ?? PRICE_FILTER_MAX,
     });
     const items = (result.items ?? [])
       .map((document) => toProduct(document))

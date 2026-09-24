@@ -36,7 +36,9 @@ const productFilter = /* groq */ `
   ) &&
   (count($categories) == 0 || category->slug.current in $categories) &&
   (count($scentFamilies) == 0 || scentFamily->slug.current in $scentFamilies) &&
-  (count($occasions) == 0 || occasion->slug.current in $occasions)
+  (count($occasions) == 0 || occasion->slug.current in $occasions) &&
+  price >= $minPrice &&
+  price <= $maxPrice
 `;
 
 const PRODUCT_SORT_CLAUSE: Record<ProductListSort, string> = {
